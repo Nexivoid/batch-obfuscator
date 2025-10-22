@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Batch Obfuscator</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+	 <style>
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+  </style>
+	 <script>
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,0.12), transparent),
+                  radial-gradient(1000px 500px at 90% 90%, rgba(0,187,255,0.08), transparent),
+                  linear-gradient(180deg,#0f172a 0%, #071025 60%);
+      color: #e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100%;
+      display:flex;align-items:center;justify-content:center;padding:40px;
+    }
+
+    .card{
+      width:100%;max-width:800px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:16px;padding:28px;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(2,6,23,0.6);
+      backdrop-filter: blur(8px) saturate(120%);
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    .top-strip{position:absolute;left:-120px;top:-40px;width:260px;height:260px;border-radius:50%;
+      background:linear-gradient(135deg, rgba(99,102,241,0.18), rgba(0,187,255,0.12));filter:blur(30px);transform:rotate(12deg)}
+
+    .header{display:flex;gap:18px;align-items:center}
+    .logo{
+      width:84px;height:84px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 6px 18px rgba(6,11,22,0.5);
+      font-size:34px;color:white;flex-shrink:0;position:relative;overflow:hidden
+    }
+    .logo .spark{position:absolute;right:-20px;top:-30px;width:120px;height:120px;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), transparent);transform:rotate(25deg);opacity:0.35}
+
+    .title{flex:1}
+    .title h1{font-size:22px;color:#f8fafc;margin-bottom:6px}
+    .title p{font-size:13px;color:rgba(230,238,248,0.8)}
+
+    .drop-wrap{margin-top:20px;display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+
+    .dropzone{
+      background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border:1px dashed rgba(255,255,255,0.06);border-radius:12px;padding:22px;min-height:180px;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;transition:all .22s ease;cursor:pointer;position:relative;overflow:hidden
+    }
+    .dropzone.hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(2,6,23,0.5);border-color:rgba(99,102,241,0.9)}
+
+    .dropzone .illustration{font-size:44px;opacity:0.95}
+    .dropzone .hint{color:rgba(230,238,248,0.9);font-weight:600}
+    .dropzone small{color:rgba(230,238,248,0.6)}
+
+    .controls{display:flex;flex-direction:column;gap:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer;position:relative;overflow:hidden;transition:transform .18s cubic-bezier(.2,.9,.2,1),box-shadow .18s ease,opacity .12s ease}
+    .btn:focus{outline:none;box-shadow:0 0 0 4px rgba(99,102,241,0.12)}
+
+    .btn.primary{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;box-shadow:0 8px 26px rgba(7,12,23,0.45)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(230,238,248,0.95)}
+
+    .btn:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(2,6,23,0.5)}
+    .btn:active{transform:translateY(-2px) scale(.985)}
+
+    .btn .ripple{position:absolute;border-radius:50%;transform:scale(0);opacity:0.6;pointer-events:none}
+    .btn.ripple-light .ripple{background:rgba(255,255,255,0.22)}
+    .btn.ripple-dark .ripple{background:rgba(0,0,0,0.12)}
+
+    .info-card{padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);font-size:13px}
+
+    .card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:rgba(230,238,248,0.6)}
+
+    @media (max-width:860px){
+      .drop-wrap{grid-template-columns:1fr;}
+      .controls{flex-direction:row;justify-content:space-between}
+      .logo{width:64px;height:64px}
+    }
+
+    @keyframes pulse {
+      0%{transform:scale(0.98)}50%{transform:scale(1.02)}100%{transform:scale(0.98)}
+    }
+    .logo{animation:pulse 6s ease-in-out infinite}
+
+    .toast{position:fixed;right:20px;bottom:20px;background:linear-gradient(180deg,#0b1220,#071025);color:#dbeafe;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(2,6,23,0.6);display:flex;gap:12px;align-items:center}
+    .toast.hide{display:none}
+
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-labelledby="title">
+    <div class="top-strip" aria-hidden="true"></div>
+    <div class="header">
+      <div class="logo" aria-hidden="true">
+        <i class="fas fa-lock"></i>
+        <div class="spark"></div>
+      </div>
+      <div class="title">
+        <h1 id="title">Batch Obfuscator</h1>
+        <p>Lightweight front-end tool — merge payload with .bat files.</p>
+      </div>
+      <div style="min-width:160px;text-align:right">
+      </div>
+    </div>
+
+    <div class="drop-wrap">
+      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop your .bat file here">
+        <div class="illustration"><i class="fas fa-file-arrow-up"></i></div>
+        <div class="hint">Drop your <strong>.bat</strong> file here or click to choose</div>
+        <small>Supported: .bat — Output will be downloaded automatically.</small>
+      </div>
+
+      <div class="controls" aria-hidden="false">
+        <button id="chooseBtn" class="btn ghost ripple-light" title="Choose file from disk"><i class="fa-solid fa-folder-open"></i> Choose</button>
+        <div class="info-card" id="fileInfo">No file selected</div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <div>© 2025. All rights reserved.</div>
+      <div style="display:flex;gap:10px;align-items:center"><small style="color:rgba(230,238,248,0.5)">Built with ❤️</small></div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".bat" style="display:none">
+
+  <div id="toast" class="toast hide" role="status" aria-live="polite">
+    <i class="fa-solid fa-circle-check"></i>
+    <div id="toastText">Done</div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const chooseBtn = document.getElementById('chooseBtn');
+    const fileInfo = document.getElementById('fileInfo');
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toastText');
+
+    const base64Payload = "//4mY2xzDQo=";
+
+    function showToast(text, timeout = 2800){
+      toastText.textContent = text;
+      toast.classList.remove('hide');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=> toast.classList.add('hide'), timeout);
+    }
+
+    function handleFile(file){
+      if(!file) return;
+      if(!file.name.toLowerCase().endsWith('.bat')){
+        showToast('Please select a .bat file');
+        return;
+      }
+
+      fileInfo.textContent = `Selected: ${file.name} · ${Math.round(file.size/1024)} KB`;
+
+      const reader = new FileReader();
+      reader.onload = function(evt){
+        const originalContent = new Uint8Array(evt.target.result);
+        const decodedBase64 = Uint8Array.from(atob(base64Payload), c => c.charCodeAt(0));
+
+        const mergedContent = new Uint8Array(decodedBase64.length + originalContent.length);
+        mergedContent.set(decodedBase64, 0);
+        mergedContent.set(originalContent, decodedBase64.length);
+
+        const blob = new Blob([mergedContent], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = file.name.replace(/(\.\w+)$/, '_obfuscated$1');
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        document.body.removeChild(link);
+
+        showToast('Downloaded: ' + link.download);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    ['dragenter','dragover'].forEach(ev=>{
+      dropzone.addEventListener(ev,(e)=>{e.preventDefault();dropzone.classList.add('hover');e.dataTransfer.dropEffect='copy'});
+    });
+    ['dragleave','dragend','drop'].forEach(ev=>{
+      dropzone.addEventListener(ev,()=>dropzone.classList.remove('hover'));
+    });
+
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      if(e.dataTransfer.files && e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    dropzone.addEventListener('click', ()=> fileInput.click());
+    dropzone.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+
+    fileInput.addEventListener('change', ()=>{ if(fileInput.files.length) handleFile(fileInput.files[0]); });
+    chooseBtn.addEventListener('click', ()=> fileInput.click());
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const rect = btn.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const size = Math.max(rect.width, rect.height) * 1.2;
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+        btn.appendChild(ripple);
+
+        if (btn.classList.contains('ghost')) btn.classList.add('ripple-dark'); else btn.classList.add('ripple-light');
+
+        ripple.animate([
+          { transform: 'scale(0)', opacity: 0.6 },
+          { transform: 'scale(1)', opacity: 0 }
+        ], { duration: 600, easing: 'cubic-bezier(.2,.9,.2,1)' });
+
+        setTimeout(()=>{ try{ btn.removeChild(ripple); }catch(e){} }, 650);
+      });
+    });
+
+  </script>
+</body>
+</html>
